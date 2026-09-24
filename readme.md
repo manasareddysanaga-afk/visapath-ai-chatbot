@@ -1,68 +1,71 @@
-VisaPath 🇬🇧
-AI-Powered UK Immigration Assistant
+# VisaPath 🇬🇧
 
-Sanitised Project Notice
+## AI-Powered UK Immigration Assistant
 
-This is a sanitised version of a project I developed as part of my work at a previous company. Company-specific information, proprietary implementation details, credentials, data, production configuration, and other sensitive information have been removed or modified.
+> **Sanitised Project Notice**
+>
+> This is a sanitised version of a project I developed as part of my work at a previous company. Company-specific information, proprietary implementation details, credentials, data, production configuration, and other sensitive information have been removed or modified.
 
-VisaPath is a full-stack AI chatbot designed to help users explore UK visa and immigration information through a simple conversational interface.
+VisaPath is a full-stack AI chatbot designed to help users explore **UK visa and immigration information** through a simple conversational interface.
 
-The application combines a React/Vite frontend, FastAPI backend, and Ollama for local AI inference.
+The application combines a **React/Vite frontend**, **FastAPI backend**, and **Ollama** for local AI inference.
 
-✨ Features
+---
 
-💬 Conversational visa and immigration chatbot
+## ✨ Features
 
-🤖 Local AI inference using Ollama
+- 💬 Conversational visa and immigration chatbot
+- 🤖 Local AI inference using Ollama
+- 🇬🇧 UK visa and immigration information
+- 🔄 Follow-up questions based on user circumstances
+- 🧠 Simple conversation memory
+- 📱 Responsive chat interface
+- 🔗 Links to official GOV.UK information
+- ⚡ FastAPI REST API
+- ⚛️ React/Vite frontend
+- 🔐 CORS-enabled frontend/backend integration
+- 💰 Local AI inference without external AI API costs during development
 
-🇬🇧 UK visa and immigration information
+---
 
-🔄 Follow-up questions based on user circumstances
+## 🛠️ Technology Stack
 
-🧠 Simple conversation memory
+| Layer | Technology |
+|---|---|
+| **Frontend** | React, Vite, JavaScript, CSS |
+| **Backend** | Python, FastAPI, Uvicorn |
+| **AI** | Ollama, Llama 3.2 |
+| **API** | REST |
+| **Development** | Windows, Python virtual environment, Node.js, Git/GitHub |
 
-📱 Responsive chat interface
+---
 
-🔗 Links to official GOV.UK information
+## 🏗️ Architecture
 
-⚡ FastAPI REST API
-
-⚛️ React/Vite frontend
-
-🔐 CORS-enabled frontend/backend integration
-
-💰 Local AI inference without external AI API costs during development
-
-🛠️ Technology Stack
-Layer	Technology
-Frontend	React, Vite, JavaScript, CSS
-Backend	Python, FastAPI, Uvicorn
-AI	Ollama, Llama 3.2
-API	REST
-Development	Windows, Python venv, Node.js, Git/GitHub
-🏗️ Architecture
-                    VisaPath
-                       |
-          +------------+------------+
-          |                         |
-      Frontend                   Backend
-      React/Vite                 FastAPI
-          |                         |
-          |      POST /chat         |
-          +------------------------>|
-                                    |
-                                  Ollama
-                                    |
-                              llama3.2:latest
-                                    |
-                                    v
-                              AI Response
-                                    |
-          <-------------------------+
-          |
-      Chat Interface
+```text
+                         VisaPath
+                            |
+               +------------+------------+
+               |                         |
+           Frontend                   Backend
+          React/Vite                 FastAPI
+               |                         |
+               |      POST /chat         |
+               +------------------------>|
+                                         |
+                                       Ollama
+                                         |
+                                   llama3.2:latest
+                                         |
+                                         v
+                                    AI Response
+                                         |
+               <-------------------------+
+               |
+          Chat Interface
 
 Request Flow
+
 User
   ↓
 React Frontend
@@ -85,9 +88,9 @@ VisaPath uses a locally running Ollama model:
 
 llama3.2:latest
 
+The application uses the Ollama Python library to send conversation context to the local model and receive the generated response.
 
-The application uses the Ollama Python library to send the conversation context to the local model and receive the generated response.
-
+Local inference allows the application to run during development without requiring a paid external AI API.
 🧠 Conversation Memory
 
 The current MVP uses simple in-memory conversation history.
@@ -95,57 +98,81 @@ The current MVP uses simple in-memory conversation history.
 Recent messages are provided to the model to maintain conversational context while keeping the implementation lightweight.
 
 Conversation history is not persisted and can be lost when the backend restarts.
-
 🇬🇧 Information Scope
 
 The assistant can provide general information about topics such as:
 
-Skilled Worker visa
+    Skilled Worker visa
 
-Health and Care Worker visa
+    Health and Care Worker visa
 
-Global Talent visa
+    Global Talent visa
 
-Youth Mobility Scheme
+    Youth Mobility Scheme
 
-Student visa
+    Student visa
 
-UK work opportunities
+    UK work opportunities
 
-Sponsorship
+    Sponsorship
 
-General visa eligibility questions
+    General visa eligibility questions
+
+    Immigration-related follow-up questions
 
 The application is designed to direct users towards official GOV.UK guidance for current requirements.
-
 💻 Running Locally
 Requirements
 
-Python 3.10+
+Before running VisaPath, install:
 
-Node.js 18+
+    Python 3.10+
 
-Ollama
+    Node.js 18+
 
-Git
+    Ollama
+
+    Git
 
 1. Install the AI Model
+
+Make sure Ollama is installed and running.
+
+Pull the required model:
+
 ollama pull llama3.2
 
-
-Verify:
+Verify the model:
 
 ollama list
 
+You should see:
+
+llama3.2:latest
+
 2. Start the Backend
+
+Open a terminal in the project directory and run:
+
 cd backend
+
+Create a Python virtual environment:
+
 python -m venv .venv
+
+Activate it on Windows:
+
 .venv\Scripts\activate
+
+Install the backend dependencies:
+
 pip install -r requirements.txt
+
+Start FastAPI:
+
 uvicorn main:app --reload
 
-
-Backend:
+The backend will be available at:
 
 http://127.0.0.1:8000
 
@@ -154,25 +181,42 @@ http://127.0.0.1:8000
 Open another terminal:
 
 cd frontend
+
+Install the frontend dependencies:
+
 npm install
+
+Start the Vite development server:
+
 npm run dev
 
-
-Frontend:
+The frontend will usually be available at:
 
 http://localhost:5173
 
-
 Open the frontend address in your browser.
-
 🔌 API
 GET /
 
 Returns basic API information.
 
+Example response:
+
+{
+  "service": "visapath-backend",
+  "product": "VisaPath",
+  "version": "2.0"
+}
+
 GET /health
 
 Returns the backend health status.
+
+Example response:
+
+{
+  "status": "ok"
+}
 
 POST /chat
 
@@ -184,82 +228,118 @@ Example request:
   "message": "I want to work in the UK. What visa options might I have?"
 }
 
+Example response:
+
+{
+  "response": "There are several possible routes depending on your circumstances..."
+}
+
+API Documentation
 
 FastAPI provides interactive API documentation at:
 
 http://127.0.0.1:8000/docs
 
+The /docs page can be used to test the API directly through the Swagger interface.
+📁 Project Structure
+
+visapath-ai-chatbot/
+│
+├── backend/
+│   ├── main.py
+│   └── requirements.txt
+│
+├── frontend/
+│   ├── app/
+│   ├── public/
+│   ├── src/
+│   │   ├── assets/
+│   │   ├── App.jsx
+│   │   ├── App.css
+│   │   ├── index.css
+│   │   └── main.jsx
+│   ├── package.json
+│   ├── package-lock.json
+│   ├── vite.config.js
+│   └── index.html
+│
+├── PROJECT_DOCUMENTATION.md
+├── .gitignore
+└── README.md
+
 🎨 UI
 
 The interface uses a simple, professional design with:
 
-Warm ivory background
+    Warm ivory background
 
-Neutral earthy colours
+    Neutral earthy colours
 
-Beige message areas
+    Beige message areas
 
-Charcoal text
+    Charcoal text
 
-Muted brown buttons
+    Muted brown buttons
 
-Rounded chat cards
+    Rounded chat cards
 
-Responsive mobile layout
+    Responsive mobile layout
+
+    Clear spacing and typography
 
 The design keeps the conversational experience as the primary focus.
-
 ⚠️ Current Limitations
 
 This is a working MVP.
 
 Current limitations include:
 
-No persistent database
+    No persistent database
 
-No user accounts
+    No user accounts
 
-No authentication
+    No authentication
 
-No production deployment
+    No production deployment
 
-No RAG knowledge base
+    No RAG knowledge base
 
-No automated immigration-rule updates
+    No automated immigration-rule updates
 
-No persistent conversation storage
+    No persistent conversation storage
 
-No response streaming
+    No response streaming
 
-AI responses are not professional legal advice
+    No dedicated immigration knowledge database
+
+    AI responses are not professional legal advice
 
 Immigration rules can change, so important information should always be verified against current official UK Government guidance.
-
 🔮 Future Improvements
 
 Potential future improvements include:
 
-Streaming Ollama responses
+    Streaming Ollama responses
 
-Persistent conversation storage
+    Persistent conversation storage
 
-Dedicated immigration knowledge base
+    Dedicated immigration knowledge base
 
-Retrieval-Augmented Generation (RAG)
+    Retrieval-Augmented Generation (RAG)
 
-Official GOV.UK source retrieval
+    Official GOV.UK source retrieval
 
-Improved visa-route classification
+    Improved visa-route classification
 
-Structured eligibility questions
+    Structured eligibility questions
 
-User authentication
+    User authentication
 
-Production deployment
+    Production deployment
 
-Automated testing
+    Automated testing
 
-Improved error handling
+    Improved error handling
 
 📚 Documentation
 
@@ -267,39 +347,39 @@ For more detailed technical documentation, see:
 
 PROJECT_DOCUMENTATION.md
 
+The documentation contains additional information about the architecture, setup, API endpoints, AI prompt, conversation memory, testing, limitations, and development approach.
 📊 Project Status
 
-Working MVP
+Status: Working MVP
 
 The frontend and backend are integrated, with local AI inference provided by Ollama and the llama3.2:latest model.
-
 🧑‍💻 Project Scope
 
 This project demonstrates experience with:
 
-Full-stack application development
+    Full-stack application development
 
-React and Vite
+    React and Vite
 
-FastAPI REST APIs
+    FastAPI REST APIs
 
-Local LLM integration
+    Local LLM integration
 
-Ollama
+    Ollama
 
-Prompt engineering
+    Prompt engineering
 
-Conversational AI
+    Conversational AI
 
-Frontend/backend integration
+    Frontend/backend integration
 
-API design
+    API design
 
-Responsive UI development
+    Responsive UI development
 
-Python virtual environments
+    Python virtual environments
 
-Git/GitHub workflows
+    Git/GitHub workflows
 
 ⚖️ Disclaimer
 
@@ -308,5 +388,37 @@ VisaPath provides general informational guidance about UK immigration.
 It does not provide legal advice and does not replace a qualified immigration adviser or solicitor.
 
 Immigration rules and requirements can change. Users should verify important or current information using official UK Government guidance.
+🔒 Sanitisation Notice
 
-Sanitisation Notice: This repository is intended for demonstration and portfolio purposes. Proprietary company information, confidential data, credentials, production configuration, and other sensitive implementation details from the original project have been removed or modified.
+This repository is intended for demonstration and portfolio purposes.
+
+Proprietary company information, confidential data, credentials, production configuration, and other sensitive implementation details from the original project have been removed or modified.
+
+The repository is therefore a sanitised representation of the original project and may differ from the original production implementation.
+🚀 Quick Start
+
+# Clone the repository
+git clone <your-repository-url>
+
+# Backend
+cd backend
+python -m venv .venv
+.venv\Scripts\activate
+pip install -r requirements.txt
+uvicorn main:app --reload
+
+In another terminal:
+
+# Frontend
+cd frontend
+npm install
+npm run dev
+
+Make sure Ollama is running with:
+
+ollama pull llama3.2
+ollama list
+
+Then open:
+
+http://localhost:5173
