@@ -565,11 +565,11 @@ Immigration rules and requirements can change. Users should verify important or 
 
 # 🔒 Sanitisation Notice
 
-This repository is intended for **demonstration and portfolio purposes**.
+This repository is intended for demonstration and portfolio purposes.
 
 The original project was developed in a previous company environment. Company-specific information, confidential data, credentials, production configuration, proprietary implementation details, and other sensitive information have been removed or modified.
 
-This repository is therefore a **sanitised representation** of the original project and may differ from the original production implementation.
+This is an independent portfolio project inspired by general engineering patterns I have worked with previously. It was developed separately using synthetic or publicly available information and does not contain company code, confidential information, or proprietary implementation details.
 
 ---
 
