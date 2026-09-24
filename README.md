@@ -63,9 +63,13 @@ The application combines a **React/Vite frontend**, **FastAPI backend**, and **O
                <-------------------------+
                |
           Chat Interface
+```text
+         
 
-Request Flow
+## Request Flow
 
+```text
+         
 User
   ↓
 React Frontend
@@ -82,7 +86,12 @@ AI Response
   ↓
 React Chat Interface
 
-🤖 AI Model
+```text
+        
+## 🤖 AI Model
+
+```text
+       
 
 VisaPath uses a locally running Ollama model:
 
@@ -121,7 +130,13 @@ The assistant can provide general information about topics such as:
     Immigration-related follow-up questions
 
 The application is designed to direct users towards official GOV.UK guidance for current requirements.
-💻 Running Locally
+
+
+```text
+##💻 Running Locally
+
+```text
+         
 Requirements
 
 Before running VisaPath, install:
@@ -241,7 +256,13 @@ FastAPI provides interactive API documentation at:
 http://127.0.0.1:8000/docs
 
 The /docs page can be used to test the API directly through the Swagger interface.
-📁 Project Structure
+
+```text
+         
+##📁 Project Structure
+
+```text
+         
 
 visapath-ai-chatbot/
 │
@@ -267,7 +288,12 @@ visapath-ai-chatbot/
 ├── .gitignore
 └── README.md
 
-🎨 UI
+```text
+         
+##🎨 UI
+
+```text
+         
 
 The interface uses a simple, professional design with:
 
@@ -288,7 +314,13 @@ The interface uses a simple, professional design with:
     Clear spacing and typography
 
 The design keeps the conversational experience as the primary focus.
-⚠️ Current Limitations
+
+```text
+         
+##⚠️ Current Limitations
+
+```text
+         
 
 This is a working MVP.
 
@@ -315,7 +347,13 @@ Current limitations include:
     AI responses are not professional legal advice
 
 Immigration rules can change, so important information should always be verified against current official UK Government guidance.
-🔮 Future Improvements
+
+```text
+         
+##🔮 Future Improvements
+
+```text
+         
 
 Potential future improvements include:
 
@@ -341,14 +379,24 @@ Potential future improvements include:
 
     Improved error handling
 
-📚 Documentation
+```text
+         
+## 📚 Documentation
+
+```text
+        
 
 For more detailed technical documentation, see:
 
 PROJECT_DOCUMENTATION.md
 
 The documentation contains additional information about the architecture, setup, API endpoints, AI prompt, conversation memory, testing, limitations, and development approach.
-📊 Project Status
+
+```text
+         
+## 📊 Project Status
+
+```text
 
 Status: Working MVP
 
@@ -381,14 +429,25 @@ This project demonstrates experience with:
 
     Git/GitHub workflows
 
-⚖️ Disclaimer
+```text
+         
+## ⚖️ Disclaimer
+
+```text
+       
 
 VisaPath provides general informational guidance about UK immigration.
 
 It does not provide legal advice and does not replace a qualified immigration adviser or solicitor.
 
 Immigration rules and requirements can change. Users should verify important or current information using official UK Government guidance.
-🔒 Sanitisation Notice
+
+```text
+         
+##🔒 Sanitisation Notice
+
+```text
+      
 
 This repository is intended for demonstration and portfolio purposes.
 
@@ -422,3 +481,7 @@ ollama list
 Then open:
 
 http://localhost:5173
+
+## Conclusion
+
+ VisaPath is a full-stack AI-powered UK immigration chatbot built with React, FastAPI, and Ollama. It demonstrates practical experience in AI integration, REST API development, prompt engineering, and responsive web development. Although it is currently an MVP, it provides a strong foundation for future improvements such as RAG, GOV.UK integration, persistent storage, authentication, and production deployment.
