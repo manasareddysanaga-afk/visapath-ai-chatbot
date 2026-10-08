@@ -1,154 +1,615 @@
+import re
+from typing import List
+
 from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-import ollama
+from pydantic import BaseModel
 
-app = FastAPI(title="VisaPath API", version="2.0")
+from langchain_ollama import OllamaEmbeddings, ChatOllama
+from langchain_chroma import Chroma
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=False,
-    allow_methods=["*"],
-    allow_headers=["*"],
+from langfuse import observe, get_client
+
+
+# ============================================================
+# CONFIGURATION
+# ============================================================
+
+CHROMA_DIR = "./chroma_db"
+COLLECTION_NAME = "visapath"
+
+EMBEDDING_MODEL = "nomic-embed-text"
+LLM_MODEL = "llama3.2"
+
+TOP_K = 6
+
+
+# ============================================================
+# FASTAPI
+# ============================================================
+
+app = FastAPI(
+    title="VisaPath API",
+    description="UK visa information assistant using GOV.UK RAG",
+    version="1.0.0",
 )
 
-# Simple conversation memory
-conversation = []
+
+# ============================================================
+# LANGFUSE
+# ============================================================
+
+langfuse = get_client()
+
+
+# ============================================================
+# EMBEDDINGS
+# ============================================================
+
+embeddings = OllamaEmbeddings(
+    model=EMBEDDING_MODEL
+)
+
+
+# ============================================================
+# LLM
+# ============================================================
+
+llm = ChatOllama(
+    model=LLM_MODEL,
+    temperature=0,
+)
+
+
+# ============================================================
+# CHROMA VECTOR DATABASE
+# ============================================================
+
+vectorstore = Chroma(
+    persist_directory=CHROMA_DIR,
+    collection_name=COLLECTION_NAME,
+    embedding_function=embeddings,
+)
+
+
+# ============================================================
+# REQUEST / RESPONSE MODELS
+# ============================================================
+
+class ChatRequest(BaseModel):
+    message: str
+
+
+class ChatResponse(BaseModel):
+    response: str
+    sources: List[str]
+    faithfulness_score: float
+    rag_score: float
+
+
+# ============================================================
+# RAG RETRIEVAL
+# ============================================================
+
+@observe(name="rag-retrieval")
+def retrieve_context(query: str, top_k: int = TOP_K):
+
+    documents = vectorstore.similarity_search(
+        query,
+        k=top_k,
+    )
+
+    contexts = []
+
+    for document in documents:
+
+        contexts.append(
+            {
+                "content": document.page_content,
+                "source": document.metadata.get(
+                    "source",
+                    "Unknown",
+                ),
+            }
+        )
+
+    return contexts
+
+
+# ============================================================
+# SYSTEM PROMPT
+# ============================================================
 
 SYSTEM_PROMPT = """
 You are VisaPath, an AI assistant for UK immigration information.
 
-Your job is to help users understand UK visa routes in simple language.
+Your job is to answer questions using ONLY the GOV.UK reference
+information provided in the CONTEXT.
 
-IMPORTANT ACCURACY RULES:
+STRICT ACCURACY RULES:
 
-1. Never invent visa names.
+1. Use ONLY information contained in the CONTEXT.
 
-2. Current UK work routes can include:
-   - Skilled Worker visa
-   - Health and Care Worker visa
-   - Global Talent visa
-   - Youth Mobility Scheme visa
-   - Other routes where relevant
+2. Do NOT use your own knowledge.
 
-3. Do NOT call Tier 2 (General) a current visa route.
-   Explain that the Skilled Worker visa replaced Tier 2 (General).
+3. Do NOT invent visa requirements, fees, salary thresholds,
+   processing times, eligibility rules, dates, or other facts.
 
-4. Do NOT use terms such as:
-   - General Nursing Visa
-   - NHS Worker Visa
-   unless the user is specifically asking about those terms.
+4. Do NOT assume information that is not explicitly stated.
 
-5. For nurses and eligible healthcare professionals, explain that
-   the Health and Care Worker visa may be relevant.
+5. If the CONTEXT does not contain enough information to answer
+   the question accurately, say:
 
-6. Do not invent salary thresholds.
-   Salary requirements depend on the visa route, occupation,
-   occupation code, going rate and the applicant's circumstances.
+"I don't have enough information in the GOV.UK reference
+material to answer that accurately."
 
-7. Immigration rules change over time.
-   When discussing current requirements, tell the user to verify
-   the latest information on GOV.UK.
+6. Only mention requirements explicitly supported by the
+   retrieved context.
 
-8. Give short answers.
-   Prefer 3-6 bullet points rather than long explanations.
+7. Do not combine requirements from different visa routes unless
+   the context explicitly supports doing so.
 
-9. If important information is missing, ask a small number of
-   useful follow-up questions, such as:
-   - nationality
-   - job/occupation
-   - whether they have a UK job offer
-   - qualifications or experience
+8. Do not claim that the user is eligible for a visa.
 
-10. Provide general immigration information only.
-    Do not claim to be a solicitor or immigration lawyer.
+9. Do not give legal advice.
 
-11. Do not pretend to know the user's eligibility without enough
-    information.
+10. Keep the answer simple and clear.
 
-Example:
+11. Every factual statement must be supported by the provided
+    GOV.UK context.
 
-User: "I want to work in the UK. What visa options might I have?"
+12. If information is incomplete, do not guess.
 
-Good answer:
+13. Do not add facts simply because they may be generally true
+    about UK immigration.
 
-"There are several possible routes, depending on your job and
-circumstances:
+14. When describing different visa routes, keep their
+    requirements separate.
 
-- Skilled Worker visa — for eligible jobs with an approved UK sponsor.
-- Health and Care Worker visa — for eligible healthcare and social
-  care roles, including many nursing roles.
-- Global Talent visa — for people who qualify based on recognised
-  talent or promise in eligible fields.
-- Youth Mobility Scheme — available only to eligible nationals who
-  meet the scheme's requirements.
+15. If a source only supports one visa route, do not apply its
+    requirements to another visa route.
 
-To narrow this down, tell me your nationality, the job you want to do,
-and whether you already have a UK job offer."
-
-Keep answers concise and avoid unnecessary detail.
+Return only the answer to the user.
 """
 
-@app.get("/")
-def root():
-    return {
-        "service": "visapath-backend",
-        "product": "VisaPath",
-        "version": "2.0"
-    }
+
+# ============================================================
+# BUILD CONTEXT
+# ============================================================
+
+def build_context(contexts):
+
+    if not contexts:
+        return "NO RELEVANT GOV.UK INFORMATION WAS RETRIEVED."
+
+    sections = []
+
+    for index, item in enumerate(contexts, start=1):
+
+        sections.append(
+            f"""
+--- SOURCE {index} ---
+
+URL:
+{item["source"]}
+
+CONTENT:
+{item["content"]}
+"""
+        )
+
+    return "\n".join(sections)
 
 
-@app.get("/health")
-def health():
-    return {
-        "status": "ok"
-    }
+# ============================================================
+# GENERATE ANSWER
+# ============================================================
+
+@observe(name="ollama-generation")
+def generate_answer(question: str, contexts):
+
+    context_text = build_context(contexts)
+
+    prompt = f"""
+{SYSTEM_PROMPT}
+
+==================================================
+GOV.UK REFERENCE CONTEXT
+==================================================
+
+{context_text}
+
+==================================================
+USER QUESTION
+==================================================
+
+{question}
+
+==================================================
+ANSWER
+==================================================
+"""
+
+    response = llm.invoke(prompt)
+
+    answer = response.content.strip()
+
+    return answer
 
 
-@app.post("/chat")
-def chat(data: dict):
+# ============================================================
+# SCORE PARSER
+# ============================================================
 
-    message = data.get("message", "").strip()
+def parse_score(raw_score: str) -> float:
 
-    if not message:
-        return {
-            "response": "Please enter a question."
-        }
+    if not raw_score:
+        return 0.0
 
-    # Add user message
-    conversation.append({
-        "role": "user",
-        "content": message
-    })
+    text = raw_score.strip()
 
-    # Only send the last 6 messages to Ollama
-    recent_conversation = conversation[-6:]
-
-    messages = [
-        {
-            "role": "system",
-            "content": SYSTEM_PROMPT
-        },
-        *recent_conversation
-    ]
-
-    result = ollama.chat(
-        model="llama3.2:latest",
-        messages=messages,
-        options={
-            "temperature": 0.2,
-            "num_predict": 250
-        }
+    # Try to find one of the allowed scores anywhere
+    # in the model response.
+    matches = re.findall(
+        r"(?<!\d)(1\.0|0\.75|0\.50|0\.25|0\.0)(?!\d)",
+        text,
     )
 
-    response = result["message"]["content"].strip()
+    if not matches:
+        return 0.0
 
-    # Store assistant response
-    conversation.append({
-        "role": "assistant",
-        "content": response
-    })
+    try:
+
+        score = float(matches[-1])
+
+        allowed_scores = {
+            0.0,
+            0.25,
+            0.50,
+            0.75,
+            1.0,
+        }
+
+        if score in allowed_scores:
+            return score
+
+    except ValueError:
+        pass
+
+    return 0.0
+
+
+# ============================================================
+# FAITHFULNESS EVALUATION
+# ============================================================
+
+@observe(name="faithfulness-evaluation")
+def evaluate_faithfulness(answer: str, contexts):
+
+    context_text = build_context(contexts)
+
+    evaluation_prompt = f"""
+You are a strict factual-grounding evaluator.
+
+Your ONLY task is to determine whether the AI ANSWER is supported
+by the GOV.UK CONTEXT.
+
+You MUST NOT use outside knowledge.
+
+Judge only what is explicitly supported by the supplied context.
+
+==================================================
+GOV.UK CONTEXT
+==================================================
+
+{context_text}
+
+==================================================
+AI ANSWER
+==================================================
+
+{answer}
+
+==================================================
+EVALUATION METHOD
+==================================================
+
+Break the AI answer into its important factual claims.
+
+For each claim, ask:
+
+"Is this claim explicitly supported by the GOV.UK context?"
+
+Do not reward a claim merely because it sounds reasonable.
+
+Do not use your own knowledge of UK immigration.
+
+If a claim is not supported by the context, treat it as
+unsupported.
+
+==================================================
+SCORE
+==================================================
+
+1.0
+
+All important factual claims are directly supported.
+
+0.75
+
+Most important claims are supported, with only a minor
+unsupported detail.
+
+0.50
+
+Some important claims are supported, but there are meaningful
+unsupported claims.
+
+0.25
+
+Most important claims are unsupported.
+
+0.0
+
+The answer is substantially unsupported or contradicts the
+provided context.
+
+==================================================
+IMPORTANT
+==================================================
+
+Return ONLY the numerical score.
+
+Valid outputs are exactly:
+
+1.0
+0.75
+0.50
+0.25
+0.0
+"""
+
+    result = llm.invoke(evaluation_prompt)
+
+    raw_score = result.content.strip()
+
+    score = parse_score(raw_score)
+
+    print()
+    print("FAITHFULNESS EVALUATOR")
+    print("----------------------")
+    print(f"Raw result: {raw_score}")
+    print(f"Parsed score: {score}")
+    print()
+
+    return score
+
+
+# ============================================================
+# RAG EVALUATION
+# ============================================================
+
+@observe(name="rag-evaluation")
+def evaluate_rag_answer(
+    question: str,
+    answer: str,
+    contexts,
+):
+
+    context_text = build_context(contexts)
+
+    evaluation_prompt = f"""
+You are evaluating a RAG-based UK immigration assistant.
+
+The assistant must answer using ONLY the supplied GOV.UK
+reference context.
+
+==================================================
+USER QUESTION
+==================================================
+
+{question}
+
+==================================================
+REFERENCE CONTEXT
+==================================================
+
+{context_text}
+
+==================================================
+AI ANSWER
+==================================================
+
+{answer}
+
+==================================================
+EVALUATION
+==================================================
+
+Evaluate the answer on these criteria:
+
+1. Does it answer the user's question?
+2. Is it supported by the retrieved context?
+3. Does it avoid unsupported claims?
+4. Does it avoid invented information?
+5. Does it keep visa requirements separate?
+6. Does it avoid claiming the user is eligible?
+7. Does it acknowledge missing information when necessary?
+
+==================================================
+SCORE
+==================================================
+
+1.0 = Excellent grounded answer.
+
+0.75 = Good answer with minor issues.
+
+0.50 = Partially correct or partially grounded.
+
+0.25 = Major problems.
+
+0.0 = Incorrect or substantially unsupported.
+
+Return ONLY the numerical score.
+
+Valid outputs are exactly:
+
+1.0
+0.75
+0.50
+0.25
+0.0
+"""
+
+    result = llm.invoke(evaluation_prompt)
+
+    raw_score = result.content.strip()
+
+    score = parse_score(raw_score)
+
+    print()
+    print("RAG EVALUATOR")
+    print("-------------")
+    print(f"Raw result: {raw_score}")
+    print(f"Parsed score: {score}")
+    print()
+
+    return score
+
+
+# ============================================================
+# CHAT ENDPOINT
+# ============================================================
+
+@app.post(
+    "/chat",
+    response_model=ChatResponse,
+)
+@observe(name="chat")
+def chat(request: ChatRequest):
+
+    question = request.message.strip()
+
+    # --------------------------------------------------------
+    # Validate question
+    # --------------------------------------------------------
+
+    if not question:
+
+        return ChatResponse(
+            response="Please enter a question.",
+            sources=[],
+            faithfulness_score=0.0,
+            rag_score=0.0,
+        )
+
+    # --------------------------------------------------------
+    # Retrieve GOV.UK context
+    # --------------------------------------------------------
+
+    contexts = retrieve_context(
+        query=question,
+        top_k=TOP_K,
+    )
+
+    # --------------------------------------------------------
+    # Generate grounded answer
+    # --------------------------------------------------------
+
+    answer = generate_answer(
+        question=question,
+        contexts=contexts,
+    )
+
+    # --------------------------------------------------------
+    # Faithfulness evaluation
+    # --------------------------------------------------------
+
+    faithfulness_score = evaluate_faithfulness(
+        answer=answer,
+        contexts=contexts,
+    )
+
+    # --------------------------------------------------------
+    # RAG evaluation
+    # --------------------------------------------------------
+
+    rag_score = evaluate_rag_answer(
+        question=question,
+        answer=answer,
+        contexts=contexts,
+    )
+
+    # --------------------------------------------------------
+    # Collect unique sources
+    # --------------------------------------------------------
+
+    sources = []
+
+    for context in contexts:
+
+        source = context.get("source")
+
+        if source and source not in sources:
+            sources.append(source)
+
+    # --------------------------------------------------------
+    # Send scores to Langfuse
+    # --------------------------------------------------------
+
+    try:
+
+        langfuse.score(
+            name="faithfulness",
+            value=faithfulness_score,
+        )
+
+        langfuse.score(
+            name="rag_evaluation",
+            value=rag_score,
+        )
+
+    except Exception as e:
+
+        print(
+            f"Langfuse scoring warning: {e}"
+        )
+
+    # --------------------------------------------------------
+    # Flush Langfuse
+    # --------------------------------------------------------
+
+    try:
+
+        langfuse.flush()
+
+    except Exception:
+        pass
+
+    # --------------------------------------------------------
+    # Return response
+    # --------------------------------------------------------
+
+    return ChatResponse(
+        response=answer,
+        sources=sources,
+        faithfulness_score=faithfulness_score,
+        rag_score=rag_score,
+    )
+
+
+# ============================================================
+# HEALTH CHECK
+# ============================================================
+
+@app.get("/")
+def health_check():
 
     return {
-        "response": response
+        "status": "ok",
+        "service": "VisaPath",
+        "rag": "enabled",
+        "hallucination_control": "enabled",
+        "faithfulness_evaluation": "enabled",
+        "rag_evaluation": "enabled",
     }
+

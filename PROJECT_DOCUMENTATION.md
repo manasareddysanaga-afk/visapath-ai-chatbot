@@ -1,140 +1,237 @@
-VisaPath 🇬🇧
-AI-Powered UK Immigration Assistant
+# VisaPath
 
-Sanitised Project Notice
-This is a sanitised version of a project I developed as part of my work at a previous company. Company-specific information, proprietary implementation details, credentials, data, and other sensitive information have been removed or modified.
+## AI-Powered UK Immigration Information Assistant
 
-VisaPath is a full-stack AI assistant designed to help users explore UK immigration and visa information through a simple conversational interface.
+VisaPath is a full-stack AI application designed to help users explore UK immigration and visa information through a simple conversational interface.
 
-The application combines a React/Vite frontend, FastAPI backend, and Ollama for local AI inference, allowing the project to run without requiring a paid external AI API during local development.
+The application combines a **React/Vite frontend**, **FastAPI backend**, **LangChain**, **Chroma vector database**, and **Ollama/Llama 3.2** for local AI inference.
 
-Disclaimer: VisaPath provides general informational guidance about UK immigration. It does not provide legal advice and is not a replacement for a qualified immigration adviser or solicitor. Immigration rules can change, so users should verify important or current information using official UK Government guidance.
+VisaPath uses **Retrieval-Augmented Generation (RAG)** to retrieve relevant GOV.UK reference information before generating an answer. The system also includes **Langfuse observability**, **hallucination controls**, **faithfulness evaluation**, and an automated **20-question RAG evaluation suite**.
 
-✨ Features
+The project is designed as a portfolio/development project demonstrating practical experience with full-stack development, local LLM integration, RAG pipelines, prompt engineering, evaluation, and LLM observability.
 
-💬 Conversational UK immigration assistant
+---
 
-🤖 Local AI inference using Ollama
+## ⚠️ Disclaimer
 
-🇬🇧 UK visa information and guidance
+VisaPath provides general informational guidance about UK immigration.
 
-🔄 Follow-up questions based on user circumstances
+It does **not** provide legal advice and is not a replacement for a qualified immigration adviser or solicitor.
 
-🧠 Simple conversation memory
+UK immigration rules can change. Users should verify important or current information using official UK Government guidance before making immigration decisions.
 
-📱 Responsive chat interface
+---
 
-🔗 Official GOV.UK links for common visa routes
+## 🔐 Sanitised Project Notice
 
-⚡ FastAPI REST API
+This repository is a sanitised version of a project developed for demonstration and portfolio purposes.
 
-⚛️ React-based frontend
+Company-specific information, proprietary implementation details, credentials, confidential data, production configuration, and other sensitive information have been removed or modified.
 
-🔐 CORS-enabled frontend/backend integration
+No private company credentials or proprietary production information should be included in this repository.
 
-💰 No external AI API costs during local development
+---
 
-🛠️ Technology Stack
-Frontend
+# ✨ Features
 
-React
+VisaPath currently provides:
 
-Vite
+- 💬 Conversational UK immigration assistant
+- 🇬🇧 UK visa information and guidance
+- 🤖 Local LLM inference using Ollama
+- 🦙 Llama 3.2
+- 🔗 LangChain integration
+- 🧠 Retrieval-Augmented Generation (RAG)
+- 📚 GOV.UK reference document retrieval
+- 🗄️ Chroma vector database
+- 🔎 Semantic similarity search
+- 🛡️ Hallucination/grounding controls
+- 📊 Langfuse tracing and observability
+- 🎯 Faithfulness evaluation
+- 🧪 RAG evaluation
+- 📋 Automated 20-question evaluation suite
+- 🔗 GOV.UK source attribution
+- 🧠 Simple conversation memory
+- 📱 Responsive React interface
+- ⚡ FastAPI REST API
+- 🔐 CORS-enabled frontend/backend integration
+- 💰 No paid external AI API required for local development
 
-JavaScript
+---
 
-CSS
+# 🏗️ System Architecture
 
-HTML
+The current VisaPath architecture is:
 
-Backend
-
-Python
-
-FastAPI
-
-Uvicorn
-
-Ollama Python library
-
-AI
-
-Ollama
-
-llama3.2:latest
-
-Development Environment
-
-Windows
-
-Node.js
-
-Python
-
-Python virtual environment
-
-Git / GitHub
-
-🏗️ System Architecture
+```
                          VisaPath
-                            |
-               +------------+------------+
-               |                         |
-           Frontend                   Backend
-          React/Vite                 FastAPI
-               |                         |
-               |      POST /chat         |
-               +------------------------>|
-                                         |
-                                       Ollama
-                                         |
-                                   llama3.2:latest
-                                         |
-                                         v
-                                    AI Response
-                                         |
-               <-------------------------+
-               |
-          Chat Interface
+                            │
+             ┌──────────────┴──────────────┐
+             │                             │
+             ▼                             ▼
+      React / Vite                    FastAPI
+       Frontend                      Backend API
+                                           │
+                                           ▼
+                                  Query Processing
+                                           │
+                                           ▼
+                                  Chroma Vector DB
+                                           │
+                                           ▼
+                                  GOV.UK Documents
+                                           │
+                                           ▼
+                                  Retrieved Context
+                                           │
+                                           ▼
+                                  Grounded Prompt
+                                           │
+                                           ▼
+                                  LangChain
+                                           │
+                                           ▼
+                                    ChatOllama
+                                           │
+                                           ▼
+                                     Llama 3.2
+                                           │
+                                           ▼
+                                  Generated Answer
+                                           │
+                            ┌──────────────┴──────────────┐
+                            │                             │
+                            ▼                             ▼
+                       User Response              Evaluation Layer
+                                                          │
+                                            ┌─────────────┴─────────────┐
+                                            ▼                           ▼
+                                      Faithfulness                 RAG Score
+                                            │                           │
+                                            └─────────────┬─────────────┘
+                                                          ▼
+                                                       Langfuse
+```
 
-Request Flow
+---
 
-The user enters a question in the React frontend.
+# 🔄 Request Flow
 
-The frontend sends the question to the FastAPI backend.
+A typical user request follows this process:
 
-FastAPI adds the recent conversation context.
+1. The user enters a question in the React frontend.
+2. React sends the question to the FastAPI `/chat` endpoint.
+3. FastAPI receives the question.
+4. The question is sent to the RAG retrieval layer.
+5. Chroma performs semantic similarity search against the GOV.UK document collection.
+6. The most relevant documents are retrieved.
+7. The retrieved content and source URLs are added to the generation prompt.
+8. LangChain sends the grounded prompt to Ollama.
+9. Ollama runs the Llama 3.2 model locally.
+10. The model generates an answer using the retrieved context.
+11. A faithfulness evaluator checks whether the answer is supported by the retrieved context.
+12. A separate RAG evaluator assesses the overall quality of the answer.
+13. Scores are sent to Langfuse.
+14. The API returns the answer, sources, and faithfulness score.
+15. React displays the response to the user.
 
-The backend sends the messages to the locally running Ollama model.
+---
 
-Ollama generates an AI response.
+# 🛠️ Technology Stack
 
-FastAPI returns the response to the frontend.
+## Frontend
 
-React displays the response in the chat interface.
+- React
+- Vite
+- JavaScript
+- CSS
+- HTML
 
-📋 Requirements
+## Backend
 
-Before running VisaPath, install the following:
+- Python
+- FastAPI
+- Uvicorn
+- Pydantic
 
-Python
+## AI / LLM
+
+- Ollama
+- Llama 3.2
+- LangChain
+- `ChatOllama`
+
+## RAG
+
+- Chroma
+- LangChain Chroma integration
+- `OllamaEmbeddings`
+- `nomic-embed-text`
+- Semantic similarity search
+- GOV.UK reference documents
+
+## Observability
+
+- Langfuse
+- OpenTelemetry-based tracing through the Langfuse SDK
+- Retrieval tracing
+- LLM generation tracing
+- Evaluation scores
+
+## Evaluation
+
+- Faithfulness evaluation
+- RAG evaluation
+- 20-question evaluation dataset
+- Automated evaluation script
+
+## Development Environment
+
+- Windows
+- Python virtual environment
+- Node.js
+- npm
+- Git
+- GitHub
+
+---
+
+# 📋 Requirements
+
+Before running VisaPath locally, install the following.
+
+## Python
 
 Python 3.10+ is recommended.
 
 Check your installation:
 
+```
 python --version
+```
 
-Node.js
+Example:
+
+```
+Python 3.11.x
+```
+
+---
+
+## Node.js
 
 Node.js 18+ is recommended.
 
-Check your installation:
+Check:
 
+```
 node --version
 npm --version
+```
 
-Ollama
+---
+
+## Ollama
 
 Install Ollama from:
 
@@ -142,47 +239,93 @@ https://ollama.com/
 
 Check the installation:
 
+```
 ollama --version
-
+```
 
 Example:
 
+```
 ollama version is 0.34.3
+```
 
-🤖 AI Model Setup
+---
+
+# 🤖 AI Model Setup
 
 VisaPath currently uses:
 
+```
 llama3.2:latest
+```
 
+Download the model:
 
-Download the model using:
-
+```
 ollama pull llama3.2
-
+```
 
 Check installed models:
 
+```
 ollama list
-
+```
 
 You should see something similar to:
 
-NAME               SIZE
-llama3.2:latest    2.0 GB
-
+```
+NAME              SIZE
+llama3.2:latest   2.0 GB
+```
 
 Ollama must be running while using the chatbot.
 
-📁 Project Structure
+---
+
+# 🧠 Embedding Model
+
+The RAG pipeline uses:
+
+```
+nomic-embed-text
+```
+
+The embedding model converts user questions and reference documents into vectors so that semantically relevant information can be retrieved.
+
+Pull the embedding model:
+
+```
+ollama pull nomic-embed-text
+```
+
+Check:
+
+```
+ollama list
+```
+
+You should see both:
+
+```
+llama3.2
+nomic-embed-text
+```
+
+---
+
+# 📁 Project Structure
 
 The project is organized into separate frontend and backend applications.
 
+```
 ai-visa-assistant/
 │
 ├── backend/
 │   ├── main.py
+│   ├── evaluate.py
 │   ├── requirements.txt
+│   ├── chroma_db/
+│   │
 │   └── .venv/
 │
 ├── frontend/
@@ -194,169 +337,734 @@ ai-visa-assistant/
 │   │   ├── App.css
 │   │   ├── index.css
 │   │   └── main.jsx
+│   │
 │   ├── package.json
 │   ├── package-lock.json
 │   ├── vite.config.js
 │   └── index.html
 │
 └── README.md
+```
 
-🚀 Backend Setup
+---
 
-Navigate to the backend directory:
+# 🚀 Backend Setup
 
+Open a terminal and navigate to the backend:
+
+```
 cd backend
+```
 
-Create a Virtual Environment
+---
+
+## Create a Virtual Environment
+
+Windows:
+
+```
 python -m venv .venv
+```
 
+Activate it:
 
-Activate the environment on Windows:
-
+```
 .venv\Scripts\activate
+```
 
+After activation you should see:
 
-After activation, your terminal should show:
-
+```
 (.venv)
+```
 
-Install Backend Dependencies
+---
+
+# 📦 Install Backend Dependencies
 
 The backend uses:
 
-FastAPI
+- FastAPI
+- Uvicorn
+- LangChain
+- Ollama integration
+- Chroma
+- Langfuse
 
-Uvicorn
+Install the dependencies:
 
-Ollama
-
-Install them with:
-
-pip install fastapi uvicorn ollama
-
-
-Alternatively, use the included requirements.txt:
-
+```
 pip install -r requirements.txt
+```
 
+If installing manually:
 
-Example requirements.txt:
+```
+pip install fastapi uvicorn langchain langchain-ollama langchain-chroma chromadb langfuse
+```
 
-fastapi
-uvicorn
-ollama
+---
 
-▶️ Run the Backend
+# 🔐 Langfuse Configuration
+
+Langfuse is used to monitor and evaluate the RAG pipeline.
+
+The application expects Langfuse credentials to be configured as environment variables.
+
+Typical configuration:
+
+```
+LANGFUSE_PUBLIC_KEY
+LANGFUSE_SECRET_KEY
+LANGFUSE_HOST
+```
+
+For example:
+
+```
+LANGFUSE_HOST=https://cloud.langfuse.com
+```
+
+Do not commit Langfuse credentials to GitHub.
+
+Use environment variables or a local `.env` file that is excluded from version control.
+
+Example:
+
+```
+.env
+```
+
+should be included in `.gitignore`.
+
+---
+
+# ▶️ Run the Backend
 
 From the backend directory:
 
+```
 uvicorn main:app --reload
-
+```
 
 The backend should start at:
 
+```
 http://127.0.0.1:8000
-
+```
 
 You should see:
 
+```
 Application startup complete.
+```
 
-🔌 Backend API
+---
 
-VisaPath provides several API endpoints.
+# 🔌 Backend API
 
-GET /
+VisaPath exposes a FastAPI REST API.
 
-Checks that the VisaPath API is running.
+## GET /
 
-Example response:
+The root endpoint checks that the API is running.
 
-{
-  "service": "visapath-backend",
-  "product": "VisaPath",
-  "version": "2.0"
-}
+Example:
 
-GET /health
+```
+GET http://127.0.0.1:8000/
+```
+
+---
+
+## GET /health
 
 Health check endpoint.
 
-Example response:
+Example:
 
+```
+GET http://127.0.0.1:8000/health
+```
+
+Expected response:
+
+```
 {
   "status": "ok"
 }
+```
 
-POST /chat
+---
 
-Sends a user question to VisaPath.
+# 💬 POST /chat
 
-Request
+The `/chat` endpoint accepts a user question and returns a grounded AI response.
+
+## Request
+
+```
 {
   "message": "I want to work in the UK. What visa options might I have?"
 }
+```
 
-Example Response
+## Example Response
+
+```
 {
-  "response": "There are several possible routes..."
+  "response": "You may be eligible for a Skilled Worker visa or a Health and Care Worker visa, depending on your job and employer.",
+  "sources": [
+    "https://www.gov.uk/skilled-worker-visa",
+    "https://www.gov.uk/health-care-worker-visa"
+  ],
+  "faithfulness_score": 1.0,
+  "rag_score": 1.0
 }
+```
 
-📚 API Documentation
+The exact answer and source list depend on the retrieved context.
+
+---
+
+# 📚 API Documentation
 
 FastAPI automatically provides interactive API documentation.
 
 After starting the backend, open:
 
+```
 http://127.0.0.1:8000/docs
+```
 
+This provides a Swagger interface where the `/chat` endpoint can be tested directly.
 
-This provides a Swagger interface where the /chat endpoint can be tested directly.
+---
 
-💻 Frontend Setup
+# 🧠 Retrieval-Augmented Generation
 
-Open another terminal and navigate to the frontend directory:
+VisaPath uses RAG to reduce unsupported model responses.
 
-cd frontend
+Instead of asking the LLM to answer directly from its pretrained knowledge, the application first retrieves relevant GOV.UK information.
 
+The process is:
 
-Install the frontend dependencies:
+```
+Question
+   ↓
+Embedding
+   ↓
+Vector Search
+   ↓
+Relevant GOV.UK Documents
+   ↓
+Context
+   ↓
+Grounded Prompt
+   ↓
+Llama 3.2
+   ↓
+Answer
+```
 
-npm install
+---
 
+# 🗄️ Chroma Vector Database
 
-The frontend is built using:
+Chroma stores the embedded GOV.UK reference documents.
 
-React
+The backend initializes the vector database using:
 
-React DOM
+```
+vectorstore = Chroma(
+    persist_directory=CHROMA_DIR,
+    collection_name=COLLECTION_NAME,
+    embedding_function=embeddings,
+)
+```
 
-Vite
+The current configuration uses:
 
-Dependencies are defined in:
+```
+CHROMA_DIR = "./chroma_db"
+COLLECTION_NAME = "visapath"
+```
 
-frontend/package.json
+---
 
-▶️ Run the Frontend
+# 🔎 Retrieval
 
-From the frontend directory:
+The RAG system performs semantic similarity search.
 
-npm run dev
+Current configuration:
 
+```
+TOP_K = 6
+```
 
-Vite will provide a local development address, usually:
+The backend retrieves the six most relevant documents for a question.
 
-http://localhost:5173
+Each retrieved document contains:
 
+```
+content
+source
+```
 
-Open the address in your browser to use VisaPath.
+The source is the GOV.UK URL associated with the reference material.
 
-🔗 Frontend → Backend Integration
+---
 
-The frontend communicates with the FastAPI backend using a POST request.
+# 🧩 Embeddings
+
+VisaPath uses:
+
+```
+nomic-embed-text
+```
+
+through LangChain:
+
+```
+embeddings = OllamaEmbeddings(
+    model="nomic-embed-text"
+)
+```
+
+The embedding model is used to represent both queries and documents as vectors.
+
+This allows the application to retrieve semantically related content even when the wording of the question does not exactly match the wording in the source document.
+
+---
+
+# 🤖 LangChain + Ollama
+
+The LLM is accessed through LangChain's Ollama integration.
 
 Example:
 
+```
+llm = ChatOllama(
+    model="llama3.2",
+    temperature=0,
+)
+```
+
+The model receives the system instructions, retrieved GOV.UK context, and the user's question.
+
+---
+
+# 🛡️ Hallucination Control
+
+VisaPath includes explicit grounding rules in the system prompt.
+
+The assistant is instructed to:
+
+- Use only retrieved GOV.UK information.
+- Never use unsupported outside knowledge.
+- Never invent visa requirements.
+- Never invent fees.
+- Never invent salary thresholds.
+- Never invent processing times.
+- Never invent eligibility requirements.
+- Avoid combining unrelated visa requirements.
+- Never claim that a user is personally eligible.
+- Say when the available context is insufficient.
+- Avoid presenting itself as a legal adviser.
+
+The key principle is:
+
+```
+No evidence in retrieved context
+            ↓
+Do not make the claim
+```
+
+This provides a controlled boundary around the LLM's normal tendency to use its pretrained knowledge.
+
+---
+
+# 📖 Grounded Generation
+
+The retrieved documents are inserted into the prompt together with their source URLs.
+
+Conceptually:
+
+```
+SYSTEM INSTRUCTIONS
+
+        +
+
+GOV.UK REFERENCE CONTEXT
+
+        +
+
+USER QUESTION
+
+        ↓
+
+     Llama 3.2
+
+        ↓
+
+Grounded Answer
+```
+
+The model is explicitly told that factual claims must be supported by the supplied context.
+
+---
+
+# 🔗 Source Attribution
+
+The backend returns the sources associated with retrieved documents.
+
+Example:
+
+```
+{
+  "sources": [
+    "https://www.gov.uk/skilled-worker-visa",
+    "https://www.gov.uk/health-care-worker-visa"
+  ]
+}
+```
+
+This provides traceability between the generated response and the reference material.
+
+The source URLs are official GOV.UK pages.
+
+---
+
+# 📊 Langfuse Observability
+
+VisaPath integrates Langfuse to provide observability across the RAG pipeline.
+
+The system records operations including:
+
+```
+chat
+ ├── rag-retrieval
+ ├── ollama-generation
+ ├── faithfulness-evaluation
+ └── rag-evaluation
+```
+
+This makes it possible to inspect:
+
+- User questions
+- Retrieved documents
+- Retrieval latency
+- Generated answers
+- LLM generation latency
+- Evaluation scores
+- Source information
+- Individual traces
+
+This is useful when debugging both retrieval and generation quality.
+
+---
+
+# 🔬 Faithfulness Evaluation
+
+After generating an answer, VisaPath evaluates whether the answer is actually supported by the retrieved context.
+
+The evaluator receives:
+
+```
+GOV.UK Context
+       +
+Generated Answer
+```
+
+It then assigns a score.
+
+Possible scores:
+
+```
+1.0
+0.75
+0.50
+0.25
+0.0
+```
+
+Meaning:
+
+```
+1.0
+All important factual claims are supported.
+
+0.75
+Almost all important claims are supported,
+with minor unsupported details.
+
+0.50
+Some important claims are supported,
+but meaningful unsupported claims exist.
+
+0.25
+Most important claims are unsupported.
+
+0.0
+The answer is substantially unsupported.
+```
+
+The faithfulness score is also recorded in Langfuse.
+
+---
+
+# 🎯 RAG Evaluation
+
+VisaPath also evaluates the overall RAG answer separately from the faithfulness check.
+
+The RAG evaluator considers:
+
+1. Whether the answer addresses the question.
+2. Whether it uses retrieved information.
+3. Whether unsupported claims are avoided.
+4. Whether information has been invented.
+5. Whether visa requirements have been incorrectly combined.
+6. Whether the assistant acknowledges missing information.
+
+The evaluator returns:
+
+```
+1.0
+0.75
+0.50
+0.25
+0.0
+```
+
+---
+
+# 🧪 Automated 20-Question Evaluation
+
+VisaPath includes a 20-question evaluation suite.
+
+The questions cover:
+
+- Skilled Worker visa
+- Skilled Worker requirements
+- Certificate of Sponsorship
+- Visa duration
+- Visa extension
+- English requirements
+- Health and Care Worker visa
+- Health and Care Worker requirements
+- Settlement
+- Youth Mobility Scheme
+- Youth Mobility work permissions
+- Global Talent
+- Skilled Worker costs
+- Changing employers
+- General work visa questions
+
+The evaluation can be run with:
+
+```
+python evaluate.py
+```
+
+---
+
+# 📈 Evaluation Results
+
+The current evaluation contains:
+
+```
+20 questions
+```
+
+The latest evaluation produced:
+
+```
+======================================================================
+FINAL RESULTS
+======================================================================
+
+Questions evaluated:     20
+Average faithfulness:     1.00
+Average RAG score:        0.94
+
+Faithfulness 1.0:         20/20
+RAG score 1.0:            18/20
+
+======================================================================
+Evaluation complete.
+======================================================================
+```
+
+### Interpretation
+
+**Faithfulness: 1.00**
+
+All 20 evaluated responses were judged fully supported by the supplied context.
+
+**RAG score: 0.94**
+
+The overall RAG evaluation was strong, with 18 out of 20 questions receiving a perfect score.
+
+Two questions received lower RAG scores:
+
+```
+Question 16:
+Can you work while on the Youth Mobility Scheme visa?
+
+RAG: 0.00
+
+Question 18:
+How much does a Skilled Worker visa cost?
+
+RAG: 0.75
+```
+
+These are useful regression-test cases because they identify areas where retrieval or answer completeness could be improved.
+
+---
+
+# 🧪 Running the Evaluation
+
+Start the backend first.
+
+Then from the backend directory:
+
+```
+python evaluate.py
+```
+
+The script sends the evaluation questions through the RAG pipeline and reports:
+
+- Individual faithfulness scores
+- Individual RAG scores
+- Retrieved source count
+- Average faithfulness
+- Average RAG score
+- Number of perfect evaluations
+
+---
+
+# 📋 Example Evaluation Output
+
+```
+======================================================================
+VisaPath - RAG Evaluation
+======================================================================
+
+[1/20] What is a Skilled Worker visa?
+
+...
+
+======================================================================
+FINAL RESULTS
+======================================================================
+
+Questions evaluated:     20
+Average faithfulness:     1.00
+Average RAG score:        0.94
+Faithfulness 1.0:         20/20
+RAG score 1.0:             18/20
+
+======================================================================
+QUESTION RESULTS
+======================================================================
+
+01. What is a Skilled Worker visa?
+    Faithfulness: 1.00
+    RAG:          1.00
+
+02. What are the main requirements for a Skilled Worker visa?
+    Faithfulness: 1.00
+    RAG:          1.00
+
+...
+
+20. What UK visa should I get if I have a job offer?
+    Faithfulness: 1.00
+    RAG:          1.00
+
+======================================================================
+Evaluation complete.
+======================================================================
+```
+
+---
+
+# 🧠 Conversation Memory
+
+VisaPath also supports simple conversation memory.
+
+Recent messages can be supplied to the model so that follow-up questions have conversational context.
+
+For example:
+
+```
+User:
+What is a Skilled Worker visa?
+
+Assistant:
+...
+
+User:
+How long can it last?
+
+Assistant:
+...
+```
+
+The application can retain recent conversation context rather than sending the entire conversation history.
+
+Conversation state is currently stored in application memory.
+
+Therefore:
+
+- It is not persistent.
+- It can be lost when the backend restarts.
+- It is not suitable for multi-user production deployments.
+
+---
+
+# 💻 Frontend Setup
+
+Open another terminal:
+
+```
+cd frontend
+```
+
+Install dependencies:
+
+```
+npm install
+```
+
+---
+
+# ▶️ Run the Frontend
+
+Start Vite:
+
+```
+npm run dev
+```
+
+Vite will normally provide:
+
+```
+http://localhost:5173
+```
+
+Open the address in your browser.
+
+---
+
+# 🔌 Frontend → Backend Integration
+
+The React frontend communicates with FastAPI through the `/chat` endpoint.
+
+Example:
+
+```
 fetch("http://127.0.0.1:8000/chat", {
   method: "POST",
   headers: {
@@ -366,285 +1074,279 @@ fetch("http://127.0.0.1:8000/chat", {
     message: question
   })
 });
+```
 
+The backend returns:
 
-The backend processes the question using Ollama and returns:
-
+```
 {
-  "response": "..."
+  "response": "...",
+  "sources": [],
+  "faithfulness_score": 1.0,
+  "rag_score": 1.0
 }
+```
 
+The frontend displays the generated response.
 
-The frontend then displays the response inside the chat interface.
+---
 
-🤖 Ollama Integration
+# 🎨 UI Design
 
-The backend uses the Ollama Python library.
+VisaPath uses a simple conversational interface designed around:
 
-Import Ollama:
+- Neutral earthy colours
+- Warm ivory backgrounds
+- Beige message areas
+- Charcoal text
+- Muted brown primary controls
+- Rounded chat cards
+- Clear spacing
+- Responsive layout
+- Simple navigation
 
-import ollama
+The interface is intentionally lightweight so the conversation remains the main focus.
 
+---
 
-The model is called using:
+# 🧪 Manual API Testing
 
-result = ollama.chat(
-    model="llama3.2:latest",
-    messages=messages,
-    options={
-        "temperature": 0.2,
-        "num_predict": 250
-    }
-)
+The backend can be tested directly from Windows Command Prompt.
 
+Start the backend:
 
-The generated response is retrieved using:
+```
+uvicorn main:app --reload
+```
 
-response = result["message"]["content"]
+Then run:
 
-🧠 Conversation Memory
+```
+curl -X POST http://127.0.0.1:8000/chat -H "Content-Type: application/json" -d "{\"message\":\"I want to work in the UK. What visa options might I have?\"}"
+```
 
-VisaPath currently uses simple in-memory conversation history.
+Example response:
 
-The backend stores user and assistant messages in:
+```
+{
+  "response": "You may be eligible for a Skilled Worker visa or a Health and Care Worker visa, depending on your job and employer.",
+  "sources": [
+    "https://www.gov.uk/skilled-worker-visa",
+    "https://www.gov.uk/health-care-worker-visa"
+  ],
+  "faithfulness_score": 1.0,
+  "rag_score": 1.0
+}
+```
 
-conversation = []
+---
 
+# 🧪 Testing Through Swagger
 
-Only recent messages are sent to the model to reduce latency and unnecessary context.
+Alternatively, open:
 
-For example:
+```
+http://127.0.0.1:8000/docs
+```
 
-recent_conversation = conversation[-6:]
+Find:
 
+```
+POST /chat
+```
 
-This allows the assistant to understand the recent conversation while keeping the implementation lightweight.
+Select:
 
-Conversation history is stored only in application memory and can be lost when the backend restarts.
+```
+Try it out
+```
 
-📝 AI Prompt
+Enter:
 
-VisaPath uses a system prompt to guide the AI model.
+```
+{
+  "message": "I want to work in the UK. What visa options might I have?"
+}
+```
 
-The prompt instructs the model to:
+Then select:
 
-Provide UK immigration information
+```
+Execute
+```
 
-Avoid inventing visa names or requirements
+The response will include the generated answer, sources, and evaluation scores.
 
-Ask useful follow-up questions
+---
 
-Keep responses concise
+# 🔍 Testing the RAG Pipeline
 
-Avoid presenting itself as a solicitor
+A useful development question is:
 
-Be careful with changing immigration requirements
+```
+I want to work in the UK. What visa options might I have?
+```
 
-Direct users to GOV.UK for current official requirements
+The retrieval system should identify relevant GOV.UK material such as:
 
-The AI is intended to act as an information assistant, not as a replacement for professional immigration advice.
-
-🇬🇧 Current Visa Information Scope
-
-The assistant can discuss topics including:
-
+```
 Skilled Worker visa
-
 Health and Care Worker visa
-
-Global Talent visa
-
 Youth Mobility Scheme
+```
 
-Student visa
+The final answer should only make claims supported by the retrieved material.
 
-UK work opportunities
+---
 
-Sponsorship
+# ⚖️ Official GOV.UK Sources
 
-General visa eligibility questions
-
-Immigration-related follow-up questions
-
-Visa rules and requirements can change. Users should verify current requirements using official GOV.UK guidance.
-
-🔗 Official UK Government Information
+VisaPath is designed around official UK Government reference material.
 
 Useful official sources include:
 
-UK Visas and Immigration
+## UK Visas and Immigration
+
 https://www.gov.uk/browse/visas-immigration
 
-Skilled Worker visa
+## Skilled Worker visa
+
 https://www.gov.uk/skilled-worker-visa
 
-Health and Care Worker visa
+## Health and Care Worker visa
+
 https://www.gov.uk/health-care-worker-visa
 
-The application should not treat a locally generated AI response as the final legal or official authority.
+## Youth Mobility Scheme
 
-🎨 UI Design
+https://www.gov.uk/youth-mobility
 
-VisaPath uses a simple, professional interface designed around:
+Users should always verify current requirements against GOV.UK because immigration rules can change.
 
-Neutral earthy colours
+---
 
-Warm ivory background
+# 🔐 Security Considerations
 
-Beige message areas
+The project is intended for local development and demonstration.
 
-Charcoal text
+Do not commit:
 
-Muted brown primary buttons
+```
+.env
+API keys
+Langfuse secret keys
+private credentials
+production configuration
+private datasets
+```
 
-Rounded chat cards
+Use environment variables for secrets.
 
-Responsive mobile layout
+For example:
 
-Clear spacing and typography
+```
+LANGFUSE_PUBLIC_KEY=...
+LANGFUSE_SECRET_KEY=...
+LANGFUSE_HOST=...
+```
 
-The interface is intentionally simple so that the main focus remains on the conversation.
+Add sensitive files to `.gitignore`.
 
-▶️ Running the Complete Application
+---
 
-VisaPath requires Ollama, the backend, and the frontend to be running during local development.
+# ⚠️ Known Limitations
 
-Terminal 1 — Ollama
+VisaPath is currently a development/portfolio application.
 
-Make sure the model is installed:
+It does not currently provide:
 
-ollama list
+- User authentication
+- Persistent user accounts
+- Production database storage
+- Production deployment
+- Automated GOV.UK rule updates
+- Professional immigration advice
+- Guaranteed legal accuracy
+- Automated source freshness checking
+- Streaming AI responses
+- Request cancellation/stop button
+- Production-grade multi-user conversation storage
 
+The RAG system also depends on the quality and freshness of the documents stored in the Chroma database.
 
-Confirm that the following model is available:
+The evaluation system provides useful development metrics but should not be interpreted as proof of legal or factual correctness in every real-world scenario.
 
-llama3.2:latest
+---
 
-Terminal 2 — Backend
-cd backend
-.venv\Scripts\activate
-uvicorn main:app --reload
-
-
-Backend:
-
-http://127.0.0.1:8000
-
-Terminal 3 — Frontend
-cd frontend
-npm install
-npm run dev
-
-
-Frontend:
-
-http://localhost:5173
-
-🧪 Testing
-Test the Backend
-
-Open:
-
-http://127.0.0.1:8000
-
-
-Expected response:
-
-{
-  "service": "visapath-backend",
-  "product": "VisaPath",
-  "version": "2.0"
-}
-
-Test the Health Endpoint
-
-Open:
-
-http://127.0.0.1:8000/health
-
-
-Expected response:
-
-{
-  "status": "ok"
-}
-
-Test the Chat API
-
-Open:
-
-http://127.0.0.1:8000/docs
-
-
-Find the POST /chat endpoint and send:
-
-{
-  "message": "I want to work in the UK."
-}
-
-
-The API should return an AI-generated response.
-
-⚠️ Known Limitations
-
-VisaPath is currently an MVP.
-
-The application does not currently include:
-
-Persistent database storage
-
-User accounts
-
-Authentication
-
-Production deployment
-
-Retrieval-Augmented Generation (RAG)
-
-Automated immigration-rule updates
-
-Dedicated immigration knowledge database
-
-Production-grade conversation storage
-
-AI response streaming
-
-Professional legal advice
-
-The current conversation memory is stored in application memory and can be lost when the backend restarts.
-
-🔮 Future Improvements
+# 🔮 Future Improvements
 
 Potential future improvements include:
 
-Streaming Ollama responses
+## Retrieval
 
-Persistent conversation storage
+- Hybrid keyword + vector search
+- Document reranking
+- Improved chunking
+- Metadata filtering
+- Better query expansion
+- Retrieval hit-rate evaluation
+- Larger evaluation datasets
 
-Dedicated immigration knowledge base
+## Data
 
-Retrieval-Augmented Generation (RAG)
+- Automated GOV.UK document updates
+- Document version tracking
+- Source freshness monitoring
+- Automatic re-indexing
 
-Official GOV.UK source retrieval
+## AI
 
-Improved visa-route classification
+- Improved answer citation
+- Structured visa-route classification
+- Better uncertainty handling
+- More robust claim-level verification
 
-Sponsor and employer search
+## UX
 
-Structured eligibility questions
+- Streaming responses
+- Stop/cancel generation
+- Better loading states
+- Conversation history
+- User accounts
 
-User authentication
+## Infrastructure
 
-Production deployment
+- Persistent database
+- Authentication
+- Production deployment
+- Monitoring and alerting
+- Automated CI/CD
 
-Automated testing
+---
 
-Improved error handling
+# 📊 Development Metrics
 
-🧑‍💻 Development Philosophy
+Current development baseline:
 
-VisaPath was developed incrementally, with the initial goal of demonstrating a complete working AI application using a straightforward architecture:
+| Metric | Result |
+| --- | --- |
+| Evaluation questions | 20 |
+| Average faithfulness | **1.00** |
+| Average RAG score | **0.94** |
+| Faithfulness 1.0 | **20/20** |
+| RAG score 1.0 | **18/20** |
 
+These metrics provide a baseline for future improvements.
+
+---
+
+# 🧑‍💻 Development Philosophy
+
+VisaPath was developed incrementally.
+
+The original application started as a straightforward local LLM application:
+
+```
 React
   ↓
 FastAPI
@@ -656,50 +1358,410 @@ Llama 3.2
 FastAPI
   ↓
 React
+```
 
+The application was then extended with retrieval:
 
-The architecture allows additional infrastructure and capabilities to be introduced as the application evolves.
+```
+React
+  ↓
+FastAPI
+  ↓
+Chroma
+  ↓
+GOV.UK Context
+  ↓
+Ollama / Llama 3.2
+  ↓
+Response
+```
 
-📊 Project Status
+The current system adds evaluation and observability:
 
-Status: Working MVP
+```
+                         ┌───────────────┐
+                         │    React      │
+                         │    Frontend   │
+                         └───────┬───────┘
+                                 │
+                                 ▼
+                         ┌───────────────┐
+                         │    FastAPI    │
+                         └───────┬───────┘
+                                 │
+                    ┌────────────┴────────────┐
+                    │                         │
+                    ▼                         ▼
+             ┌───────────────┐       ┌───────────────┐
+             │    Chroma     │       │   Langfuse    │
+             │  Vector DB    │       │  Observability│
+             └───────┬───────┘       └───────────────┘
+                     │
+                     ▼
+             ┌───────────────┐
+             │ GOV.UK Context│
+             └───────┬───────┘
+                     │
+                     ▼
+             ┌───────────────┐
+             │   LangChain   │
+             │   ChatOllama  │
+             └───────┬───────┘
+                     │
+                     ▼
+             ┌───────────────┐
+             │   Llama 3.2   │
+             └───────┬───────┘
+                     │
+                     ▼
+             ┌─────────────────────┐
+             │ Generated Response  │
+             └──────────┬──────────┘
+                        │
+             ┌──────────┴──────────┐
+             ▼                     ▼
+      ┌──────────────┐      ┌──────────────┐
+      │ Faithfulness │      │ RAG Evaluation│
+      │ Evaluation   │      │              │
+      └──────┬───────┘      └──────┬───────┘
+             │                     │
+             └──────────┬──────────┘
+                        ▼
+                    Langfuse
+```
 
-The frontend and backend are integrated, with local AI inference provided by Ollama and the llama3.2:latest model.
+The goal is to demonstrate that an LLM application is not just about generating text. A useful production-oriented AI system also needs:
 
-👨‍💻 Project Scope
+- Relevant retrieval
+- Grounding
+- Source attribution
+- Evaluation
+- Observability
+- Error analysis
+- Iterative improvement
 
-This project demonstrates experience with:
+---
 
-Full-stack application development
+# 📊 Project Status
 
-React and Vite
+## Current Status: Working RAG-Based AI Application
 
-FastAPI REST API development
+VisaPath currently demonstrates:
 
-Local LLM integration
+- Full-stack React/FastAPI development
+- Local LLM inference
+- Ollama integration
+- Llama 3.2
+- LangChain
+- Chroma vector search
+- RAG
+- GOV.UK reference retrieval
+- Grounded generation
+- Hallucination controls
+- Source attribution
+- Langfuse tracing
+- Faithfulness evaluation
+- RAG evaluation
+- Automated 20-question evaluation
+- Frontend/backend integration
+- Responsive UI
+- Local development workflow
 
-Ollama
+Current evaluation baseline:
 
-Prompt engineering
+```
+Faithfulness: 1.00
+RAG score:    0.94
+```
 
-Conversational AI
+---
 
-Frontend/backend integration
+# 🧑‍💻 Project Scope
 
-API design
+VisaPath demonstrates practical experience with:
 
-Responsive UI development
+- Full-stack application development
+- React
+- Vite
+- FastAPI
+- REST APIs
+- Python
+- LangChain
+- Ollama
+- Llama 3.2
+- Embeddings
+- Vector databases
+- Chroma
+- Retrieval-Augmented Generation
+- Prompt engineering
+- Grounded generation
+- Hallucination control
+- LLM evaluation
+- Faithfulness evaluation
+- RAG evaluation
+- Langfuse observability
+- Source attribution
+- Conversational AI
+- Responsive UI development
+- API design
+- Git/GitHub workflows
+- Local AI development
 
-Local development environments
+---
 
-Git/GitHub workflows
+# 🎯 What This Project Demonstrates
 
-⚖️ Disclaimer
+The project demonstrates an end-to-end AI engineering workflow:
 
-VisaPath provides general informational guidance about UK immigration.
+```
+Build
+  ↓
+Retrieve
+  ↓
+Generate
+  ↓
+Observe
+  ↓
+Evaluate
+  ↓
+Identify Weaknesses
+  ↓
+Improve
+```
 
-It does not provide legal advice and does not replace a qualified immigration adviser or solicitor.
+Rather than relying only on an LLM's pretrained knowledge, VisaPath uses a retrieval layer and evaluation pipeline to make the system more grounded and measurable.
 
-Immigration rules and requirements can change. Users should verify important or current information using official UK Government guidance.
+The current 20-question evaluation provides a reproducible baseline for future changes.
 
-Sanitisation Notice: This repository is intended for demonstration and portfolio purposes. Proprietary company information, confidential data, credentials, production configuration, and other sensitive implementation details from the original project have been removed or modified.
+---
+
+# 🚀 Running the Complete Application
+
+VisaPath requires three main components during local development.
+
+## Terminal 1 — Ollama
+
+Make sure Ollama is installed and the models are available:
+
+```
+ollama list
+```
+
+Confirm:
+
+```
+llama3.2
+nomic-embed-text
+```
+
+Ollama should remain running.
+
+---
+
+## Terminal 2 — Backend
+
+```
+cd backend
+```
+
+Activate the virtual environment:
+
+```
+.venv\Scripts\activate
+```
+
+Start FastAPI:
+
+```
+uvicorn main:app --reload
+```
+
+Backend:
+
+```
+http://127.0.0.1:8000
+```
+
+Swagger:
+
+```
+http://127.0.0.1:8000/docs
+```
+
+---
+
+## Terminal 3 — Frontend
+
+```
+cd frontend
+```
+
+Install dependencies if necessary:
+
+```
+npm install
+```
+
+Start Vite:
+
+```
+npm run dev
+```
+
+Frontend:
+
+```
+http://localhost:5173
+```
+
+---
+
+# 🧪 Run the Evaluation
+
+With the backend and Ollama available:
+
+```
+cd backend
+.venv\Scripts\activate
+python evaluate.py
+```
+
+Expected evaluation structure:
+
+```
+Questions evaluated: 20
+
+Average faithfulness: 1.00
+Average RAG score:    0.94
+```
+
+---
+
+# 📝 Example User Questions
+
+The following questions can be used to test VisaPath:
+
+```
+What is a Skilled Worker visa?
+
+What are the main requirements for a Skilled Worker visa?
+
+Do I need a confirmed job offer for a Skilled Worker visa?
+
+What is a Certificate of Sponsorship?
+
+How long can a Skilled Worker visa last?
+
+Can I extend a Skilled Worker visa?
+
+What English language requirement applies to a Skilled Worker visa?
+
+What is a Health and Care Worker visa?
+
+Do I need a confirmed job offer for a Health and Care Worker visa?
+
+How long can a Health and Care Worker visa last?
+
+Can a Health and Care Worker visa be extended?
+
+Can someone on a Health and Care Worker visa eventually apply to settle?
+
+What is the Youth Mobility Scheme visa?
+
+How long can you stay under the Youth Mobility Scheme?
+
+What can you do while on the Youth Mobility Scheme visa?
+
+Can you work while on the Youth Mobility Scheme visa?
+
+What is the Global Talent visa?
+
+How much does a Skilled Worker visa cost?
+
+Can I change my employer while on a Skilled Worker visa?
+
+What UK visa should I get if I have a job offer?
+```
+
+---
+
+# 📌 Important Design Principle
+
+VisaPath does not attempt to make the LLM the final authority.
+
+The intended architecture is:
+
+```
+Official Reference Material
+          ↓
+       Retrieval
+          ↓
+   Grounded Generation
+          ↓
+      Evaluation
+          ↓
+       Response
+```
+
+This makes the system more transparent and measurable than a standalone LLM chatbot.
+
+---
+
+# ⚖️ Final Disclaimer
+
+VisaPath is an AI-powered informational tool for educational and demonstration purposes.
+
+It does not provide legal advice.
+
+It does not determine whether an individual qualifies for a UK visa.
+
+Immigration requirements can change over time.
+
+Users should verify important information using current official GOV.UK guidance and seek professional immigration advice where appropriate.
+
+---
+
+# 👨‍💻 Project Status
+
+**VisaPath — Working RAG-Based AI Application**
+
+Current baseline:
+
+```
+RAG                         ✅
+Chroma                      ✅
+LangChain                   ✅
+Ollama                      ✅
+Llama 3.2                   ✅
+GOV.UK retrieval            ✅
+Grounding controls          ✅
+Source attribution          ✅
+Langfuse tracing            ✅
+Faithfulness evaluation     ✅
+RAG evaluation              ✅
+20-question evaluation      ✅
+React frontend              ✅
+FastAPI backend              ✅
+
+Streaming                   🔮 Future
+Request cancellation       🔮 Future
+Production deployment      🔮 Future
+Automated GOV.UK updates   🔮 Future
+```
+
+---
+
+## 📈 Evaluation Baseline
+
+```
+20 evaluation questions
+
+Average Faithfulness: 1.00
+Average RAG Score:    0.94
+
+20/20 Faithfulness = 1.00
+18/20 RAG Score     = 1.00
+```
+
+This baseline can be used to measure the impact of future retrieval, prompt, embedding, model, and evaluation improvements.
+
